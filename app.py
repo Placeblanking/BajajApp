@@ -3,14 +3,25 @@ import pandas as pd
 
 st.set_page_config(page_title="Bajaj Dashboard", layout="wide")
 
+# Initialize session state
 if "page" not in st.session_state:
     st.session_state.page = "Home"
+if "history" not in st.session_state:
+    st.session_state.history = []
 
-
+# Navigation helpers
 def go_to(page_name: str):
+    if st.session_state.page != page_name:
+        st.session_state.history.append(st.session_state.page)
     st.session_state.page = page_name
 
+def go_back():
+    if st.session_state.history:
+        st.session_state.page = st.session_state.history.pop()
+    else:
+        st.session_state.page = "Home"
 
+# Sidebar Navigation
 st.sidebar.title("Navigation")
 page = st.sidebar.radio(
     "Go to",
@@ -20,10 +31,13 @@ page = st.sidebar.radio(
     ),
 )
 
-# Sync sidebar navigation
+# Sync sidebar selection with state
 if page != st.session_state.page:
-    st.session_state.page = page
+    go_to(page)
 
+# Universal Back Button (Sidebar)
+if st.session_state.page != "Home":
+    st.sidebar.button("⬅️ Back", on_click=go_back)
 
 # ---------------- HOME ----------------
 if st.session_state.page == "Home":
@@ -38,11 +52,13 @@ if st.session_state.page == "Home":
         if st.button("🚫 See Blacklisted Companies", use_container_width=True):
             go_to("Blacklist Companies")
 
-
 # ---------------- HISTORIC RATES ----------------
 elif st.session_state.page == "Historic Rates":
-    st.sidebar.button("⬅️ Back to Home", on_click=lambda: go_to("Home"))
     st.title("📊 Historic Rates Dashboard")
+
+    # Back button on page
+    if st.button("⬅️ Back to Home"):
+        go_back()
 
     sub_choice = st.radio("Choose dataset:", ["Railways", "Accounts"], horizontal=True)
 
@@ -211,11 +227,13 @@ elif st.session_state.page == "Historic Rates":
     except Exception as e:
         st.error(f"Error loading file: {e}")
 
-
 # ---------------- BLACKLIST COMPANIES ----------------
 elif st.session_state.page == "Blacklist Companies":
-    st.sidebar.button("⬅️ Back to Home", on_click=lambda: go_to("Home"))
     st.title("🚫 Blacklist Companies Dashboard")
+
+    # Back button on page
+    if st.button("⬅️ Back to Home"):
+        go_back()
 
     try:
         df_blacklist = pd.read_excel("blacklist_clean.xlsx")
