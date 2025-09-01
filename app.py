@@ -89,24 +89,25 @@ elif st.session_state.page == "Historic Rates":
                     lambda x: None if pd.isna(x) else f"L{int(x)}"
                 )
 
+                # ---- Sorting fix (L1, L2, L3...) ----
+                df_filtered["RankOrder"] = df_filtered["Status"].str.extract(r"(\d+)").astype(float)
+                df_filtered = df_filtered.sort_values(
+                    by=["Tender Due Date", "RankOrder"], ascending=[False, True]
+                )
+
                 # ---- Conditional Formatting ----
                 def highlight_row(row):
                     style = ""
                     if row["Status"] == "L1":
                         style += "background-color: lightgreen; "
-                    elif row["Status"] == "L2":
-                        style += "background-color: orange; "
+                    elif row["Status"] == "L2":   # Fixed L2 color
+                        style += "background-color: lightblue; "
                     elif row["Status"] == "L3":
                         style += "background-color: lightsalmon; "
                     return [style] * len(row)
 
-                # ---- Sorting ----
-                df_filtered = df_filtered.sort_values(
-                    by=["Tender Due Date", "Status"], ascending=[False, True]
-                )
-
                 st.dataframe(
-                    df_filtered.style.apply(highlight_row, axis=1),
+                    df_filtered.drop(columns=["RankOrder"]).style.apply(highlight_row, axis=1),
                     use_container_width=True,
                 )
             else:
@@ -181,26 +182,27 @@ elif st.session_state.page == "Historic Rates":
                 )
                 competitor_companies = competitor_counts[competitor_counts >= 2].index.tolist()
 
+                # ---- Sorting fix ----
+                df_filtered["RankOrder"] = df_filtered["Status"].str.extract(r"(\d+)").astype(float)
+                df_filtered = df_filtered.sort_values(
+                    by=["Publish Date", "RankOrder"], ascending=[False, True]
+                )
+
                 # ---- Conditional Formatting ----
                 def highlight_row(row):
                     style = ""
                     if row["Status"] == "L1":
                         style += "background-color: lightgreen; "
                     elif row["Status"] == "L2":
-                        style += "background-color: orange; "
+                        style += "background-color: lightblue; "
                     elif row["Status"] == "L3":
                         style += "background-color: lightsalmon; "
                     if row["Company Name"] in competitor_companies:
                         style += "color: red; font-weight: bold;"
                     return [style] * len(row)
 
-                # ---- Sorting ----
-                df_filtered = df_filtered.sort_values(
-                    by=["Publish Date", "Status"], ascending=[False, True]
-                )
-
                 st.dataframe(
-                    df_filtered.style.apply(highlight_row, axis=1),
+                    df_filtered.drop(columns=["RankOrder"]).style.apply(highlight_row, axis=1),
                     use_container_width=True,
                 )
             else:
